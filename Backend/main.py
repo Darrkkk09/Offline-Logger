@@ -41,6 +41,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+@app.head("/")
+async def root():
+    """Root endpoint for Render health checks and API discovery"""
+    return {
+        "status": "ok",
+        "service": "Offline Issue Logger API",
+        "docs": "/docs",
+        "health": "/api/health"
+    }
+
 # Include API routes
 app.include_router(health.router, prefix="/api", tags=["Health"])
 app.include_router(tickets.router, prefix="/api", tags=["Tickets"])
