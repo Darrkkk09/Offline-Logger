@@ -3,7 +3,7 @@
  * Uses native fetch API without complex HTTP wrappers.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://offline-logger.onrender.com/api";
 
 /**
  * Sends a batch of offline tickets to backend FastAPI endpoint (/api/tickets/sync).
