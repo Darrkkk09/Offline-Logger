@@ -1,117 +1,128 @@
-# Offline Issue Logger for the Floor
+# FloorLog — Offline Issue Logger for the Floor
 
-An offline-first mobile PWA system designed for factory engineers to report floor defects when internet connectivity is spotty or unavailable.
+**FloorLog** is an offline-first mobile Progressive Web App (PWA) and FastAPI backend system designed for factory floor engineers to report defect issues when network connectivity is spotty or unavailable.
+
+Network drops on a production floor are normal. FloorLog captures station IDs, equipment serial numbers, defect descriptions, and compressed photos locally on the device in IndexedDB, then automatically synchronizes structured tickets to MongoDB as soon as network connectivity is restored.
+
+---
+
+## Key Capabilities
+
+* **Offline-First Storage**: Tickets written directly to local device storage via IndexedDB before any server transmission.
+* **On-Device Photo Compression**: Defect photos captured via camera are resized and compressed directly on the browser HTML5 Canvas into binary Blob objects stored locally.
+* **Automatic Online Synchronization**: Real-time browser network status listeners automatically trigger batch synchronization as soon as connection is restored.
+* **Idempotent Batch Sync**: Unique client-generated ticket IDs and database indexes guarantee zero duplicate tickets even if retries occur during network drops.
+* **2-Part Product UI**:
+  * **Product Landing Page (`/`)**: High-polish product marketing page with visual architecture diagrams, 4-step execution workflow, and interactive mockup.
+  * **Floor Logger Application (`/app`)**: Operational defect entry form, status metrics bar, search/filter queue, and uncropped image inspection modal.
+
+---
+
+## Tech Stack
+
+### Frontend
+* **React (Pure JavaScript/JSX)**
+* **Vite**
+* **Tailwind CSS**
+* **Dexie.js (IndexedDB wrapper)**
+* **Lucide React Icons**
+* **Vite PWA Plugin (Service Worker asset caching)**
+
+### Backend
+* **Python 3.11+**
+* **FastAPI**
+* **Motor (PyMongo Async Driver)**
+* **MongoDB**
+* **Pydantic v2**
+* **Uvicorn**
+
+---
 
 ## Project Structure
 
 ```text
-offline-issue-logger/
+Offline-Logger/
+├── Backend/
+│   ├── controllers/
+│   │   ├── sync_controller.py      # Request handler for batch synchronization
+│   │   └── ticket_controller.py    # Request handler for single ticket operations
+│   ├── routes/
+│   │   ├── health.py               # Health check & MongoDB ping endpoint
+│   │   └── tickets.py              # API endpoint routes (/api/tickets)
+│   ├── schemas/
+│   │   └── ticket.py               # Pydantic validation schemas
+│   ├── services/
+│   │   ├── sync_service.py         # Batch processing & limit enforcement logic
+│   │   └── ticket_service.py       # Persistence & pagination logic
+│   ├── utils/
+│   │   └── database.py             # Motor AsyncIOMotorClient setup & index initialization
+│   ├── .env.example                # Environment template
+│   ├── main.py                     # FastAPI entrypoint
+│   └── requirements.txt            # Python dependencies
 │
-├── frontend/                # Offline-first React PWA
+├── Frontend/
 │   ├── public/
-│   │   ├── icons/
-│   │   │   ├── icon-192.png
-│   │   │   └── icon-512.png
+│   │   ├── icons/                  # PWA app icons
 │   │   └── favicon.ico
-│   │
 │   ├── src/
-│   │   ├── assets/
-│   │   │   └── logo.svg
-│   │   │
-│   │   ├── components/
-│   │   │   ├── Header.jsx
-│   │   │   ├── NetworkStatus.jsx
-│   │   │   ├── IssueForm.jsx
-│   │   │   ├── PhotoInput.jsx
-│   │   │   ├── PendingQueue.jsx
-│   │   │   ├── TicketCard.jsx
-│   │   │   └── SyncStatus.jsx
-│   │   │
-│   │   ├── pages/
-│   │   │   └── Dashboard.jsx
-│   │   │
-│   │   ├── db/
-│   │   │   └── database.js
-│   │   │
-│   │   ├── sync/
-│   │   │   └── syncManager.js
-│   │   │
-│   │   ├── services/
-│   │   │   └── api.js
-│   │   │
-│   │   ├── utils/
-│   │   │   ├── imageCompression.js
-│   │   │   └── uuid.js
-│   │   │
-│   │   ├── hooks/
-│   │   │   └── useNetworkStatus.js
-│   │   │
-│   │   ├── types/
-│   │   │   └── ticket.js
-│   │   │
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── index.css
-│   │
-│   ├── .env
+│   │   ├── components/             # Reusable UI components (Header, IssueForm, TicketCard, etc.)
+│   │   ├── pages/                  # LandingPage (/) and Dashboard (/app)
+│   │   ├── db/                     # Dexie.js database setup
+│   │   ├── sync/                   # SyncManager logic
+│   │   ├── services/               # Fetch API integration
+│   │   └── App.jsx                 # View router
+│   ├── index.html
 │   ├── package.json
-│   ├── jsconfig.json
-│   ├── vite.config.js
+│   ├── vite.config.js              # Vite & PWA plugin configuration
 │   └── README.md
 │
-├── app/                     # FastAPI Backend (Phase 2)
-│   ├── routes/
-│   │   ├── tickets.py
-│   │   └── health.py
-│   │
-│   ├── controllers/
-│   │   ├── ticket_controller.py
-│   │   └── sync_controller.py
-│   │
-│   ├── services/
-│   │   ├── ticket_service.py
-│   │   ├── sync_service.py
-│   │   └── storage_service.py
-│   │
-│   ├── schemas/
-│   │   └── ticket.py
-│   │
-│   ├── utils/
-│   │   └── database.py
-│   │
-│   └── main.py
-│
-├── tests/
-│   ├── test_tickets.py
-│   └── test_sync.py
-│
-├── .env
-├── requirements.txt
 └── README.md
 ```
 
-## How Offline Storage Works
+---
 
-1. **Local-First Saves**: Tickets are written directly to **IndexedDB** via **Dexie.js** before any server transmission.
-2. **On-Device Compression**: Camera photos are resized (max width 1280px) and compressed (JPEG quality 0.7) in browser memory using HTML5 Canvas before binary Blob storage.
-3. **Queue & Status Tracking**: Each ticket maintains a `sync_status` (`pending`, `syncing`, `synced`, `failed`).
-4. **PWA Offline Shell**: The frontend assets are cached by a Service Worker allowing offline startup.
+## Getting Started
 
-## How to Run
-
-### Frontend
+### 1. Backend Setup (FastAPI + MongoDB)
 
 ```bash
-cd frontend
+cd Backend
+
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Create local environment configuration (.env)
+cp .env.example .env
+
+# Start FastAPI server
+python -m uvicorn main:app --reload --port 8000
+```
+
+The backend API will run at `http://localhost:8000/api`.
+
+### 2. Frontend Setup (React PWA)
+
+```bash
+cd Frontend
+
+# Install dependencies
 npm install
+
+# Start Vite development server
 npm run dev
 ```
 
-The app will launch at `http://localhost:3000`.
+Open `http://localhost:3000` in your browser.
 
-### Backend (Phase 2 Placeholder)
+---
+
+## Production Build
+
+To build the frontend PWA for production deployment:
 
 ```bash
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+cd Frontend
+npm run build
 ```
+
+This compiles optimized assets and generates Service Worker caching files (`dist/sw.js` and `dist/workbox-*.js`).
