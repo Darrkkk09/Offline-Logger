@@ -163,9 +163,9 @@ tickets: 'id, client_ticket_id, title, priority, sync_status, created_at'
 
 ## 🤖 AI-Tool Usage Declaration
 
-* **Tools Used**: Antigravity AI Assistant (Google DeepMind Agentic Pair Programmer).
-* **Usage**: Used for initial project scaffolding, configuring Service Worker PWA manifest, writing FastAPI async route controllers, establishing Dexie IndexedDB schemas, and generating comprehensive unit tests (`pytest`).
-* **Originality**: All core logic, architecture design, and code walkthrough comprehension are fully owned and understood by the participant.
+* **Tools Used**: Google Gemini (AI Coding Assistant).
+* **Usage**: Used for initial code generation, assisting with Service Worker PWA setup, writing FastAPI async endpoints, establishing Dexie IndexedDB schemas, styling with Tailwind CSS, and writing unit tests. No autonomous coding agents were used.
+* **Originality**: All architecture design, code integration, logic review, and walkthrough comprehension are fully owned and understood by the participant.
 
 ---
 
