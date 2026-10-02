@@ -116,6 +116,67 @@ Open `http://localhost:3000` in your browser.
 
 ---
 
+## 🧪 Automated Tests
+
+Run the backend test suite with `pytest`:
+
+```bash
+cd Backend
+pytest
+```
+
+---
+
+## 🗄️ Database & Storage Schema
+
+### 1. Client-Side Schema (IndexedDB / Dexie.js)
+Stores tickets locally when offline:
+```javascript
+tickets: 'id, client_ticket_id, title, priority, sync_status, created_at'
+```
+
+### 2. Server-Side Schema (MongoDB Collection: `tickets`)
+```json
+{
+  "_id": "ObjectId",
+  "client_ticket_id": "UUID v4 (UNIQUE INDEX)",
+  "title": "String (1-100 chars)",
+  "description": "String (1-1000 chars)",
+  "priority": "Enum ['Low', 'Medium', 'High', 'Critical']",
+  "status": "Enum ['OPEN', 'IN_PROGRESS', 'RESOLVED']",
+  "image_base64": "String (Data URI, optional)",
+  "created_at": "ISO DateTime",
+  "synced_at": "ISO DateTime"
+}
+```
+
+---
+
+## 💡 Assumptions & Design Decisions
+
+1. **Idempotency via Client UUIDs**: Tickets generate a client-side UUID v4 before saving. MongoDB enforces a `UNIQUE` index on `client_ticket_id` so network reconnect retries can never create duplicate tickets.
+2. **Canvas Photo Compression**: Camera captures are compressed to client-side JPEG/WebP Blobs before storing in IndexedDB to preserve device memory and speed up sync payload transmission.
+3. **Optimistic Offline Writes**: Operators get instant 0ms UI confirmation when reporting defects without waiting for network ACK.
+4. **Batch Sync API**: Pending tickets are flushed in a single POST `/api/sync/batch` request upon network recovery for bandwidth efficiency.
+
+---
+
+## 🤖 AI-Tool Usage Declaration
+
+* **Tools Used**: Antigravity AI Assistant (Google DeepMind Agentic Pair Programmer).
+* **Usage**: Used for initial project scaffolding, configuring Service Worker PWA manifest, writing FastAPI async route controllers, establishing Dexie IndexedDB schemas, and generating comprehensive unit tests (`pytest`).
+* **Originality**: All core logic, architecture design, and code walkthrough comprehension are fully owned and understood by the participant.
+
+---
+
+## 📽️ Video & Live Demo
+
+* **Live API Backend**: `https://offline-logger.onrender.com/api`
+* **GitHub Repository**: `https://github.com/Darrkkk09/Offline-Logger`
+* **Demo Video**: *(Add your 3-5 minute demo video link here)*
+
+---
+
 ## Production Build
 
 To build the frontend PWA for production deployment:
@@ -126,3 +187,4 @@ npm run build
 ```
 
 This compiles optimized assets and generates Service Worker caching files (`dist/sw.js` and `dist/workbox-*.js`).
+
